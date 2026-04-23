@@ -527,7 +527,8 @@ with col3:
     st.metric("Mensualité", f"{mensualite:,.0f} €")
     st.metric("Renta. brute", f"{rentabilite_brute:.2f} %")
 
-st.markdown(f"**Écart LMNP vs SCI à l'IS : {delta:,.0f} € en faveur de {'LMNP' if winner_lmnp else 'SCI à l\\'IS'}**")
+label_gagnant = "LMNP" if winner_lmnp else "SCI à l'IS"
+st.markdown(f"**Écart LMNP vs SCI à l'IS : {delta:,.0f} € en faveur de {label_gagnant}**")
 
 # ─────────────────────────────────────────────
 # GRAPHIQUES
