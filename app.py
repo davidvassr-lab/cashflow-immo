@@ -605,9 +605,7 @@ with tab3:
         df_display_l = lmnp['df'][['annee', 'loyers', 'charges', 'interets', 'amort', 'ir', 'cash_net']].copy()
         df_display_l.columns = ['Année', 'Loyers', 'Charges', 'Intérêts', 'Amort.', 'IR', 'Cash net']
         df_display_l = df_display_l.set_index('Année')
-        st.dataframe(df_display_l.style.format("{:,.0f} €").applymap(
-            lambda v: 'color: #ef4444' if isinstance(v, str) and v.startswith('-') else ''
-        ), height=350)
+        st.dataframe(df_display_l.style.format("{:,.0f} €"), height=350)
     with col_s:
         st.markdown("**SCI à l'IS — Détail annuel**")
         df_display_s = sci['df'][['annee', 'loyers', 'charges', 'interets', 'amort', 'is', 'cash_net']].copy()
