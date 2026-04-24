@@ -9,26 +9,54 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@600;700&display=swap');
 
-html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+/* ── Base ── */
+html, body, [class*="css"] {
+    font-family: 'Barlow', sans-serif;
+    background-color: #f4f4f2;
+}
 
-h1 { font-size: 1.7rem !important; font-weight: 700 !important; color: #111827 !important; }
+/* ── Titre H1 ── */
+h1 {
+    font-family: 'Barlow Condensed', sans-serif !important;
+    font-size: 2.1rem !important;
+    font-weight: 700 !important;
+    color: #0d0d0d !important;
+    letter-spacing: 0.02em !important;
+    text-transform: uppercase !important;
+}
 
+/* ── Titres de section H3 ── */
+h3 {
+    font-family: 'Barlow Condensed', sans-serif !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.18em !important;
+    color: #b8975a !important;
+    margin-top: 2rem !important;
+    margin-bottom: 0.6rem !important;
+}
+
+/* ── Ligne séparatrice ── */
+hr { border-color: #e0dcd6 !important; margin: 1.5rem 0 !important; }
+
+/* ── Blocs récapitulatifs ── */
 .bloc {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 1.2rem 1.4rem;
-    margin-bottom: 1rem;
+    background: #1a1a18;
+    border-radius: 10px;
+    padding: 1.3rem 1.5rem;
+    margin-bottom: 0.75rem;
 }
 
 .bloc-title {
-    font-size: 0.78rem;
-    font-weight: 600;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #6b7280;
+    letter-spacing: 0.2em;
+    color: #b8975a;
     margin-bottom: 0.9rem;
 }
 
@@ -36,73 +64,124 @@ h1 { font-size: 1.7rem !important; font-weight: 700 !important; color: #111827 !
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.45rem 0;
-    border-bottom: 1px solid #f0f0f0;
-    font-size: 0.92rem;
-    color: #374151;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #2a2a28;
+    font-size: 0.9rem;
+    color: #c8c4bc;
+    font-weight: 300;
 }
 .ligne:last-child { border-bottom: none; }
-.ligne .val { font-weight: 600; color: #111827; }
-.ligne.total { font-weight: 700; color: #111827; font-size: 0.97rem; }
-.ligne.total .val { color: #2563eb; }
-
-.result-box {
-    border-radius: 14px;
-    padding: 2rem 1.5rem;
-    text-align: center;
-    margin-bottom: 1rem;
+.ligne .val { font-weight: 600; color: #f0ece4; }
+.ligne.total {
+    font-weight: 700;
+    color: #f0ece4;
+    font-size: 0.95rem;
+    margin-top: 0.2rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid #b8975a;
+    border-bottom: none;
 }
-.result-box.vert  { background: linear-gradient(135deg, #065f46, #059669); color: white; }
-.result-box.rouge { background: linear-gradient(135deg, #7f1d1d, #dc2626); color: white; }
-.result-box.bleu  { background: linear-gradient(135deg, #1e3a5f, #2563eb); color: white; }
+.ligne.total .val { color: #b8975a; font-size: 1.05rem; }
 
-.result-label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.85; margin-bottom: 0.5rem; }
-.result-value { font-size: 3.2rem; font-weight: 700; line-height: 1; }
-.result-unit  { font-size: 1rem; opacity: 0.85; margin-top: 0.3rem; }
-
-.metric-row {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
+/* ── Carte résultat principal ── */
+.result-box {
     border-radius: 10px;
-    padding: 1rem 1.2rem;
+    padding: 2.2rem 1.5rem;
+    text-align: center;
     margin-bottom: 0.75rem;
+}
+.result-box.vert {
+    background: #1a1a18;
+    border: 1px solid #2a2a28;
+    border-left: 4px solid #4ade80;
+}
+.result-box.rouge {
+    background: #1a1a18;
+    border: 1px solid #2a2a28;
+    border-left: 4px solid #f87171;
+}
+.result-box.bleu {
+    background: #1a1a18;
+    border: 1px solid #2a2a28;
+    border-left: 4px solid #b8975a;
+}
+
+.result-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: #7a756c;
+    margin-bottom: 0.6rem;
+}
+.result-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 4rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #f0ece4;
+}
+.result-value.vert  { color: #4ade80; }
+.result-value.rouge { color: #f87171; }
+.result-unit {
+    font-size: 0.85rem;
+    color: #7a756c;
+    margin-top: 0.4rem;
+    letter-spacing: 0.05em;
+}
+
+/* ── Métriques secondaires ── */
+.metric-row {
+    background: #1a1a18;
+    border-radius: 10px;
+    padding: 1rem 1.3rem;
+    margin-bottom: 0.6rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.92rem;
-    color: #374151;
+    font-size: 0.9rem;
+    color: #c8c4bc;
+    font-weight: 300;
 }
-.metric-row .mval { font-weight: 700; font-size: 1.05rem; color: #111827; }
-.metric-row .mval.vert  { color: #059669; }
-.metric-row .mval.rouge { color: #dc2626; }
+.metric-row .mval {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #f0ece4;
+}
+.metric-row .mval.vert  { color: #4ade80; }
+.metric-row .mval.rouge { color: #f87171; }
 
+/* ── Bouton CTA ── */
 .cta-btn {
     display: block;
     text-align: center;
-    background: #2563eb;
-    color: white !important;
-    font-weight: 600;
+    background: #b8975a;
+    color: #0d0d0d !important;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
     font-size: 1rem;
-    padding: 0.9rem 1rem;
-    border-radius: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
     text-decoration: none !important;
     margin-top: 2rem;
-    box-shadow: 0 4px 14px rgba(37,99,235,0.3);
+    box-shadow: 0 4px 20px rgba(184,151,90,0.25);
 }
 
-.email-wrapper {
-    max-width: 460px;
-    margin: 4rem auto;
-    text-align: center;
-}
-.email-wrapper h2 { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 0.4rem; }
-.email-wrapper p  { font-size: 0.9rem; color: #6b7280; margin-bottom: 1.5rem; }
+/* ── Gate email ── */
+.email-wrapper { max-width: 460px; margin: 4rem auto; text-align: center; }
 .legal { font-size: 0.72rem; color: #9ca3af; margin-top: 0.8rem; }
 
+/* ── Footer ── */
 footer {
-    font-size: 0.72rem; color: #9ca3af;
-    text-align: center; margin-top: 3rem;
-    padding-top: 1rem; border-top: 1px solid #f0f0f0;
+    font-size: 0.72rem;
+    color: #7a756c;
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e0dcd6;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -309,7 +388,7 @@ cf_sign  = "+" if cashflow >= 0 else ""
 st.markdown(f"""
 <div class="result-box {cf_class}">
   <div class="result-label">Cash-flow mensuel net avant impôt</div>
-  <div class="result-value">{cf_sign}{cashflow:,.0f} €</div>
+  <div class="result-value {cf_class}">{cf_sign}{cashflow:,.0f} €</div>
   <div class="result-unit">par mois</div>
 </div>
 """, unsafe_allow_html=True)
