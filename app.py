@@ -343,7 +343,7 @@ st.markdown(f"""
 
 # ── Bouton CTA (bas de page uniquement) ──────────────────────────────────────
 st.markdown("""
-<a class="cta-btn" href="https://calendly.com/david-v" target="_blank">
+<a class="cta-btn" href="https://calendar.app.google/54cCfHMosWJSd2zRA" target="_blank">
   📅 Prendre rendez-vous — Investissement clé en main
 </a>
 """, unsafe_allow_html=True)
