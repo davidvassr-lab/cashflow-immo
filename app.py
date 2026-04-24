@@ -9,179 +9,273 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* ── Base ── */
-html, body, [class*="css"] {
-    font-family: 'Barlow', sans-serif;
-    background-color: #f4f4f2;
+/* ══════════════════════════════════════════
+   VARIABLES — même palette que le dashboard
+   ══════════════════════════════════════════ */
+:root {
+  --bg:        #0f1419;
+  --panel:     #1a2029;
+  --panel2:    #232b36;
+  --border:    #2d3748;
+  --text:      #e8ecef;
+  --text-dim:  #8a95a5;
+  --text-mute: #5a6470;
+  --accent:    #4f8cff;
+  --green:     #22c55e;
+  --red:       #ef4444;
+  --amber:     #f59e0b;
+  --shadow:    0 4px 20px rgba(0,0,0,0.4);
 }
 
-/* ── Titre H1 ── */
+/* ── Fond global ── */
+html, body,
+[class*="css"],
+.stApp,
+.block-container,
+section[data-testid="stSidebar"] {
+    font-family: 'Inter', sans-serif !important;
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+}
+
+.block-container { padding-top: 2rem !important; max-width: 780px !important; }
+
+/* ── Inputs Streamlit ── */
+input, textarea,
+div[data-baseweb="input"] > div,
+div[data-baseweb="base-input"] {
+    background-color: var(--panel2) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+    border-radius: 8px !important;
+}
+label, .stNumberInput label, p {
+    color: var(--text-dim) !important;
+    font-size: 0.87rem !important;
+}
+
+/* ── Titres H1 ── */
 h1 {
-    font-family: 'Barlow Condensed', sans-serif !important;
-    font-size: 2.1rem !important;
+    font-size: 1.6rem !important;
     font-weight: 700 !important;
-    color: #0d0d0d !important;
-    letter-spacing: 0.02em !important;
-    text-transform: uppercase !important;
+    background: linear-gradient(135deg, #4f8cff, #a855f7) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    letter-spacing: 0.01em !important;
 }
 
-/* ── Titres de section H3 ── */
+/* ── Titres H3 (sections) ── */
 h3 {
-    font-family: 'Barlow Condensed', sans-serif !important;
-    font-size: 0.72rem !important;
+    font-size: 0.7rem !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.18em !important;
-    color: #b8975a !important;
-    margin-top: 2rem !important;
-    margin-bottom: 0.6rem !important;
+    letter-spacing: 0.15em !important;
+    color: var(--text-dim) !important;
+    margin-top: 1.8rem !important;
+    margin-bottom: 0.5rem !important;
+    -webkit-text-fill-color: var(--text-dim) !important;
 }
 
-/* ── Ligne séparatrice ── */
-hr { border-color: #e0dcd6 !important; margin: 1.5rem 0 !important; }
+hr { border-color: var(--border) !important; margin: 1.5rem 0 !important; }
 
-/* ── Blocs récapitulatifs ── */
+/* ══════════════════════════════════════════
+   KPI CARDS — style dashboard
+   ══════════════════════════════════════════ */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.kpi-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+}
+.kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+}
+.kpi-card.green::before { background: var(--green); }
+.kpi-card.amber::before { background: var(--amber); }
+.kpi-card.red::before   { background: var(--red); }
+.kpi-card.purple::before { background: #a855f7; }
+
+.kpi-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+}
+.kpi-value {
+    font-size: 1.55rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.1;
+}
+.kpi-sub {
+    font-size: 0.72rem;
+    color: var(--text-mute);
+    margin-top: 4px;
+}
+
+/* ══════════════════════════════════════════
+   BLOCS RÉCAP — style panel dashboard
+   ══════════════════════════════════════════ */
 .bloc {
-    background: #1a1a18;
-    border-radius: 10px;
-    padding: 1.3rem 1.5rem;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem 1.4rem;
     margin-bottom: 0.75rem;
+    box-shadow: var(--shadow);
 }
-
 .bloc-title {
-    font-family: 'Barlow Condensed', sans-serif;
     font-size: 0.65rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.2em;
-    color: #b8975a;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
     margin-bottom: 0.9rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
 }
-
 .ligne {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #2a2a28;
-    font-size: 0.9rem;
-    color: #c8c4bc;
-    font-weight: 300;
+    padding: 0.48rem 0;
+    border-bottom: 1px solid rgba(45,55,72,0.5);
+    font-size: 0.88rem;
+    color: var(--text-dim);
 }
 .ligne:last-child { border-bottom: none; }
-.ligne .val { font-weight: 600; color: #f0ece4; }
+.ligne .val { font-weight: 600; color: var(--text); }
 .ligne.total {
     font-weight: 700;
-    color: #f0ece4;
-    font-size: 0.95rem;
-    margin-top: 0.2rem;
-    padding-top: 0.65rem;
-    border-top: 1px solid #b8975a;
+    color: var(--text);
+    font-size: 0.92rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--border);
     border-bottom: none;
+    margin-top: 0.2rem;
 }
-.ligne.total .val { color: #b8975a; font-size: 1.05rem; }
+.ligne.total .val { color: var(--accent); font-size: 1rem; }
 
-/* ── Carte résultat principal ── */
+/* ══════════════════════════════════════════
+   RÉSULTAT CASHFLOW — carte principale
+   ══════════════════════════════════════════ */
 .result-box {
-    border-radius: 10px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
     padding: 2.2rem 1.5rem;
     text-align: center;
-    margin-bottom: 0.75rem;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
 }
-.result-box.vert {
-    background: #1a1a18;
-    border: 1px solid #2a2a28;
-    border-left: 4px solid #4ade80;
+.result-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
 }
-.result-box.rouge {
-    background: #1a1a18;
-    border: 1px solid #2a2a28;
-    border-left: 4px solid #f87171;
-}
-.result-box.bleu {
-    background: #1a1a18;
-    border: 1px solid #2a2a28;
-    border-left: 4px solid #b8975a;
-}
+.result-box.vert::before  { background: var(--green); }
+.result-box.rouge::before { background: var(--red); }
+.result-box.bleu::before  { background: var(--accent); }
 
 .result-label {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.2em;
-    color: #7a756c;
-    margin-bottom: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--text-mute);
+    margin-bottom: 0.7rem;
 }
 .result-value {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 4rem;
+    font-size: 3.8rem;
     font-weight: 700;
     line-height: 1;
-    color: #f0ece4;
+    color: var(--text);
 }
-.result-value.vert  { color: #4ade80; }
-.result-value.rouge { color: #f87171; }
+.result-value.vert  { color: var(--green); }
+.result-value.rouge { color: var(--red); }
 .result-unit {
-    font-size: 0.85rem;
-    color: #7a756c;
-    margin-top: 0.4rem;
-    letter-spacing: 0.05em;
+    font-size: 0.8rem;
+    color: var(--text-mute);
+    margin-top: 0.5rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
-/* ── Métriques secondaires ── */
+/* ══════════════════════════════════════════
+   MÉTRIQUES SECONDAIRES — style kpi-card
+   ══════════════════════════════════════════ */
 .metric-row {
-    background: #1a1a18;
-    border-radius: 10px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
     padding: 1rem 1.3rem;
     margin-bottom: 0.6rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.9rem;
-    color: #c8c4bc;
-    font-weight: 300;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    box-shadow: var(--shadow);
 }
 .metric-row .mval {
-    font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
-    font-size: 1.2rem;
-    color: #f0ece4;
+    font-size: 1.1rem;
+    color: var(--text);
 }
-.metric-row .mval.vert  { color: #4ade80; }
-.metric-row .mval.rouge { color: #f87171; }
+.metric-row .mval.vert  { color: var(--green); }
+.metric-row .mval.rouge { color: var(--red); }
 
-/* ── Bouton CTA ── */
+/* ══════════════════════════════════════════
+   BOUTON CTA
+   ══════════════════════════════════════════ */
 .cta-btn {
     display: block;
     text-align: center;
-    background: #b8975a;
-    color: #0d0d0d !important;
-    font-family: 'Barlow Condensed', sans-serif;
+    background: linear-gradient(135deg, #4f8cff, #a855f7);
+    color: white !important;
     font-weight: 700;
-    font-size: 1rem;
-    letter-spacing: 0.08em;
+    font-size: 0.92rem;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     padding: 1rem 1.5rem;
-    border-radius: 8px;
+    border-radius: 10px;
     text-decoration: none !important;
     margin-top: 2rem;
-    box-shadow: 0 4px 20px rgba(184,151,90,0.25);
+    box-shadow: 0 4px 20px rgba(79,140,255,0.3);
 }
 
 /* ── Gate email ── */
 .email-wrapper { max-width: 460px; margin: 4rem auto; text-align: center; }
-.legal { font-size: 0.72rem; color: #9ca3af; margin-top: 0.8rem; }
+.legal { font-size: 0.72rem; color: var(--text-mute); margin-top: 0.8rem; }
 
 /* ── Footer ── */
 footer {
-    font-size: 0.72rem;
-    color: #7a756c;
+    font-size: 0.7rem;
+    color: var(--text-mute);
     text-align: center;
     margin-top: 3rem;
     padding-top: 1rem;
-    border-top: 1px solid #e0dcd6;
+    border-top: 1px solid var(--border);
 }
 </style>
 """, unsafe_allow_html=True)
@@ -393,30 +487,33 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Rendements
-rn_cls = "vert" if rendement_net >= 0 else "rouge"
-st.markdown(f"""
-<div class="metric-row">
-  <span>Rendement brut</span>
-  <span class="mval">{rendement_brut:.2f} %</span>
-</div>
-<div class="metric-row">
-  <span>Rendement net de charges</span>
-  <span class="mval {rn_cls}">{rendement_net:.2f} %</span>
-</div>
-""", unsafe_allow_html=True)
+# Grille KPI — 4 indicateurs clés style dashboard
+rn_cls  = "vert" if rendement_net >= 0 else "rouge"
+val10   = f"{cap10:,.0f} €" if cap10 is not None else "—"
+val20   = f"{cap20:,.0f} €" if cap20 is not None else "—"
 
-# Capital remboursé
-val10 = f"{cap10:,.0f} €" if cap10 is not None else "—"
-val20 = f"{cap20:,.0f} €" if cap20 is not None else "—"
 st.markdown(f"""
-<div class="metric-row">
-  <span>Capital remboursé à 10 ans</span>
-  <span class="mval">{val10}</span>
-</div>
-<div class="metric-row">
-  <span>Capital remboursé à 20 ans</span>
-  <span class="mval">{val20}</span>
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-label">Rendement brut</div>
+    <div class="kpi-value">{rendement_brut:.2f} %</div>
+    <div class="kpi-sub">Loyer annuel / Total projet</div>
+  </div>
+  <div class="kpi-card {'green' if rendement_net >= 0 else 'red'}">
+    <div class="kpi-label">Rendement net de charges</div>
+    <div class="kpi-value">{rendement_net:.2f} %</div>
+    <div class="kpi-sub">Après déduction charges proprio</div>
+  </div>
+  <div class="kpi-card amber">
+    <div class="kpi-label">Capital remboursé à 10 ans</div>
+    <div class="kpi-value">{val10}</div>
+    <div class="kpi-sub">Enrichissement patrimonial</div>
+  </div>
+  <div class="kpi-card purple">
+    <div class="kpi-label">Capital remboursé à 20 ans</div>
+    <div class="kpi-value">{val20}</div>
+    <div class="kpi-sub">Enrichissement patrimonial</div>
+  </div>
 </div>
 """, unsafe_allow_html=True)
 
