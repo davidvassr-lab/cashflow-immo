@@ -13,11 +13,11 @@ st.markdown("""
 
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 
-h1 { font-size: 1.7rem !important; font-weight: 700 !important; color: #111827 !important; }
+h1 { font-size: 1.7rem !important; font-weight: 700 !important; color: #124660 !important; }
 
 .bloc {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
+    background: #F4EBD6;
+    border: 1px solid #C7DBC2;
     border-radius: 12px;
     padding: 1.2rem 1.4rem;
     margin-bottom: 1rem;
@@ -28,7 +28,7 @@ h1 { font-size: 1.7rem !important; font-weight: 700 !important; color: #111827 !
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #6b7280;
+    color: #1B9476;
     margin-bottom: 0.9rem;
 }
 
@@ -37,14 +37,14 @@ h1 { font-size: 1.7rem !important; font-weight: 700 !important; color: #111827 !
     justify-content: space-between;
     align-items: center;
     padding: 0.45rem 0;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid #C7DBC2;
     font-size: 0.92rem;
-    color: #374151;
+    color: #124660;
 }
 .ligne:last-child { border-bottom: none; }
-.ligne .val { font-weight: 600; color: #111827; }
-.ligne.total { font-weight: 700; color: #111827; font-size: 0.97rem; }
-.ligne.total .val { color: #2563eb; }
+.ligne .val { font-weight: 600; color: #124660; }
+.ligne.total { font-weight: 700; color: #124660; font-size: 0.97rem; }
+.ligne.total .val { color: #1B9476; }
 
 .result-box {
     border-radius: 14px;
@@ -52,17 +52,17 @@ h1 { font-size: 1.7rem !important; font-weight: 700 !important; color: #111827 !
     text-align: center;
     margin-bottom: 1rem;
 }
-.result-box.vert  { background: linear-gradient(135deg, #065f46, #059669); color: white; }
+.result-box.vert  { background: linear-gradient(135deg, #1B9476, #8BD59E); color: white; }
 .result-box.rouge { background: linear-gradient(135deg, #7f1d1d, #dc2626); color: white; }
-.result-box.bleu  { background: linear-gradient(135deg, #1e3a5f, #2563eb); color: white; }
+.result-box.bleu  { background: linear-gradient(135deg, #124660, #1B9476); color: white; }
 
 .result-label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.85; margin-bottom: 0.5rem; }
 .result-value { font-size: 3.2rem; font-weight: 700; line-height: 1; }
 .result-unit  { font-size: 1rem; opacity: 0.85; margin-top: 0.3rem; }
 
 .metric-row {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
+    background: #F4EBD6;
+    border: 1px solid #C7DBC2;
     border-radius: 10px;
     padding: 1rem 1.2rem;
     margin-bottom: 0.75rem;
@@ -70,16 +70,16 @@ h1 { font-size: 1.7rem !important; font-weight: 700 !important; color: #111827 !
     justify-content: space-between;
     align-items: center;
     font-size: 0.92rem;
-    color: #374151;
+    color: #124660;
 }
-.metric-row .mval { font-weight: 700; font-size: 1.05rem; color: #111827; }
-.metric-row .mval.vert  { color: #059669; }
+.metric-row .mval { font-weight: 700; font-size: 1.05rem; color: #124660; }
+.metric-row .mval.vert  { color: #1B9476; }
 .metric-row .mval.rouge { color: #dc2626; }
 
 .cta-btn {
     display: block;
     text-align: center;
-    background: #2563eb;
+    background: #1B9476;
     color: white !important;
     font-weight: 600;
     font-size: 1rem;
@@ -87,7 +87,7 @@ h1 { font-size: 1.7rem !important; font-weight: 700 !important; color: #111827 !
     border-radius: 10px;
     text-decoration: none !important;
     margin-top: 2rem;
-    box-shadow: 0 4px 14px rgba(37,99,235,0.3);
+    box-shadow: 0 4px 14px rgba(27,148,118,0.3);
 }
 
 .email-wrapper {
@@ -95,14 +95,14 @@ h1 { font-size: 1.7rem !important; font-weight: 700 !important; color: #111827 !
     margin: 4rem auto;
     text-align: center;
 }
-.email-wrapper h2 { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 0.4rem; }
-.email-wrapper p  { font-size: 0.9rem; color: #6b7280; margin-bottom: 1.5rem; }
-.legal { font-size: 0.72rem; color: #9ca3af; margin-top: 0.8rem; }
+.email-wrapper h2 { font-size: 1.5rem; font-weight: 700; color: #124660; margin-bottom: 0.4rem; }
+.email-wrapper p  { font-size: 0.9rem; color: #1B9476; margin-bottom: 1.5rem; }
+.legal { font-size: 0.72rem; color: #8BD59E; margin-top: 0.8rem; }
 
 footer {
-    font-size: 0.72rem; color: #9ca3af;
+    font-size: 0.72rem; color: #8BD59E;
     text-align: center; margin-top: 3rem;
-    padding-top: 1rem; border-top: 1px solid #f0f0f0;
+    padding-top: 1rem; border-top: 1px solid #C7DBC2;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -131,7 +131,7 @@ def capital_rembourse(emprunt, taeg_annuel, duree_ans, annee_n):
     return emprunt - max(0.0, crd)
 
 def fmt(n):
-    return f"{n:,.0f} €".replace(",", "\u202f")
+    return f"{n:,.0f} €".replace(",", " ")
 
 # ── Session state ─────────────────────────────────────────────────────────────
 
