@@ -147,14 +147,15 @@ def get_gsheet():
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive",
     ]
-    # Convertir le dict secrets en dict Python standard
-    # et corriger les \n littéraux dans la private_key (problème TOML Streamlit)
     sa_info = dict(st.secrets["google_service_account"])
-    sa_info["private_key"] = sa_info["private_key"].replace("\\n", "\n")
-    creds = Credentials.from_service_account_info(sa_info, scopes=scopes)
-    client = gspread.authorize(creds)
-    sheet = client.open_by_key(st.secrets["gsheets"]["sheet_id"])
-    return sheet.worksheet("Emails")
+    key = sa_info["private_key"]
+    # Diagnostic temporaire — sera retiré après correction
+    raise ValueError(
+        f"len={len(key)} | "
+        f"starts={repr(key[:40])} | "
+        f"has_real_newlines={'chr(10)' in key} | "
+        f"has_literal_backslash_n={chr(92)+'n' in key}"
+    )
 
 def find_row_by_email(ws, email):
     try:
