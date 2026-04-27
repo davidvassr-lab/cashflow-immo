@@ -149,13 +149,24 @@ def get_gsheet():
     ]
     sa_info = dict(st.secrets["google_service_account"])
     key = sa_info["private_key"]
-    # Diagnostic temporaire — sera retiré après correction
-    raise ValueError(
-        f"len={len(key)} | "
-        f"starts={repr(key[:40])} | "
-        f"has_real_newlines={'chr(10)' in key} | "
-        f"has_literal_backslash_n={chr(92)+'n' in key}"
-    )
+    # Normalisation robuste de la clé PEM
+    key = key.replace("\\n", "\n")   # \n littéraux → vrai saut de ligne
+    key = key.replace("\r\n", "\n")  # Windows CRLF → LF
+    key = key.replace("\r", "\n")    # CR seul → LF
+    if not key.endswith("\n"):
+        key += "\n"
+    sa_info["private_key"] = key
+    try:
+        creds = Credentials.from_service_account_info(sa_info, scopes=scopes)
+    except Exception as e:
+        raise ValueError(
+            f"PEM échoue après normalisation : {e} | "
+            f"ends={repr(key[-60:])} | "
+            f"has_cr={chr(13) in key}"
+        )
+    client = gspread.authorize(creds)
+    sheet = client.open_by_key(st.secrets["gsheets"]["sheet_id"])
+    return sheet.worksheet("Emails")
 
 def find_row_by_email(ws, email):
     try:
