@@ -260,8 +260,8 @@ if url_token and not st.session_state.access_granted:
                 st.rerun()
             else:
                 st.error("❌ Lien invalide ou déjà utilisé. Saisissez votre email pour recevoir un nouveau lien.")
-        except Exception:
-            st.error("Erreur de connexion à la base de données. Réessayez dans quelques instants.")
+        except Exception as e:
+            st.error(f"Erreur validation token : {type(e).__name__} — {str(e)[:500]}")
 
 # ── Gate email ────────────────────────────────────────────────────────────────
 
@@ -311,10 +311,10 @@ if not st.session_state.access_granted:
                         st.session_state.validation_sent = True
                         st.rerun()
 
-                except smtplib.SMTPException:
-                    st.error("Erreur lors de l'envoi de l'email. Réessayez dans quelques instants.")
-                except Exception:
-                    st.error("Erreur de connexion à la base de données. Réessayez dans quelques instants.")
+                except smtplib.SMTPException as e:
+                    st.error(f"Erreur lors de l'envoi de l'email : {type(e).__name__} — {str(e)[:300]}")
+                except Exception as e:
+                    st.error(f"Erreur BDD : {type(e).__name__} — {str(e)[:500]}")
 
     st.markdown('<p class="legal">En renseignant votre email, vous acceptez d\'être recontacté par David V.</p>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
