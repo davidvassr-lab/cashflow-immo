@@ -16,26 +16,124 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap');
 
-html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+:root {
+    --bg: #0a0d12;
+    --surface: #111520;
+    --surface2: #181d2e;
+    --border: #1e2640;
+    --accent: #3de8a0;
+    --accent2: #5b8fff;
+    --accent3: #ff6b6b;
+    --accent4: #ffd166;
+    --text: #e8ecf4;
+    --text-muted: #6b7599;
+}
 
-h1 { font-size: 1.7rem !important; font-weight: 700 !important; color: #124660 !important; }
+html, body, [class*="css"] {
+    font-family: 'JetBrains Mono', monospace !important;
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+}
 
+/* Fond global Streamlit */
+.stApp, section[data-testid="stSidebar"], .main {
+    background-color: var(--bg) !important;
+}
+
+/* Grille de fond subtile */
+.stApp::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(61,232,160,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(61,232,160,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Titre h1 */
+h1, h2, h3 {
+    font-family: 'Syne', sans-serif !important;
+    color: var(--text) !important;
+}
+h1 { font-size: 1.7rem !important; font-weight: 800 !important; }
+h3 { font-size: 1rem !important; font-weight: 600 !important;
+     color: var(--text-muted) !important; text-transform: uppercase;
+     letter-spacing: 0.12em !important; }
+
+/* Inputs Streamlit */
+input, textarea, select,
+div[data-baseweb="input"] input,
+div[data-baseweb="select"] div {
+    background-color: var(--surface) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+    font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* Bouton primary Streamlit */
+button[kind="primary"], .stButton button[kind="primary"] {
+    background: var(--accent) !important;
+    color: #0a0d12 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-weight: 600 !important;
+    border: none !important;
+    border-radius: 8px !important;
+}
+
+/* Labels inputs */
+label, .stNumberInput label, p {
+    color: var(--text-muted) !important;
+    font-size: 0.8rem !important;
+    font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* Divider */
+hr { border-color: var(--border) !important; }
+
+/* Métriques Streamlit */
+[data-testid="metric-container"] {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
+    padding: 1rem !important;
+}
+[data-testid="metric-container"] label { color: var(--text-muted) !important; font-size: 0.72rem !important; }
+[data-testid="metric-container"] [data-testid="stMetricValue"] {
+    color: var(--text) !important;
+    font-family: 'Syne', sans-serif !important;
+    font-size: 1.1rem !important;
+}
+
+/* ── Blocs récapitulatifs ── */
 .bloc {
-    background: #F4EBD6;
-    border: 1px solid #C7DBC2;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 12px;
     padding: 1.2rem 1.4rem;
     margin-bottom: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+.bloc::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent2);
 }
 
 .bloc-title {
-    font-size: 0.78rem;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.72rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #1B9476;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
     margin-bottom: 0.9rem;
 }
 
@@ -43,74 +141,138 @@ h1 { font-size: 1.7rem !important; font-weight: 700 !important; color: #124660 !
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.45rem 0;
-    border-bottom: 1px solid #C7DBC2;
-    font-size: 0.92rem;
-    color: #124660;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(30,38,64,0.6);
+    font-size: 0.85rem;
+    color: var(--text-muted);
 }
 .ligne:last-child { border-bottom: none; }
-.ligne .val { font-weight: 600; color: #124660; }
-.ligne.total { font-weight: 700; color: #124660; font-size: 0.97rem; }
-.ligne.total .val { color: #1B9476; }
+.ligne .val { font-weight: 500; color: var(--text); font-family: 'JetBrains Mono', monospace; }
+.ligne.total { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+.ligne.total .val { color: var(--accent); font-family: 'Syne', sans-serif; font-size: 1rem; }
 
+/* ── Carte résultat cash-flow ── */
 .result-box {
     border-radius: 14px;
     padding: 2rem 1.5rem;
     text-align: center;
     margin-bottom: 1rem;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
 }
-.result-box.vert  { background: linear-gradient(135deg, #1B9476, #8BD59E); color: white; }
-.result-box.rouge { background: linear-gradient(135deg, #7f1d1d, #dc2626); color: white; }
-.result-box.bleu  { background: linear-gradient(135deg, #124660, #1B9476); color: white; }
+.result-box.vert  {
+    background: linear-gradient(135deg, rgba(61,232,160,0.12), rgba(61,232,160,0.04));
+    border-color: rgba(61,232,160,0.3);
+}
+.result-box.rouge {
+    background: linear-gradient(135deg, rgba(255,107,107,0.12), rgba(255,107,107,0.04));
+    border-color: rgba(255,107,107,0.3);
+}
+.result-box.bleu  {
+    background: linear-gradient(135deg, rgba(91,143,255,0.12), rgba(91,143,255,0.04));
+    border-color: rgba(91,143,255,0.3);
+}
 
-.result-label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.85; margin-bottom: 0.5rem; }
-.result-value { font-size: 3.2rem; font-weight: 700; line-height: 1; }
-.result-unit  { font-size: 1rem; opacity: 0.85; margin-top: 0.3rem; }
+.result-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+}
+.result-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 3.2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+.result-box.vert  .result-value { color: var(--accent); }
+.result-box.rouge .result-value { color: var(--accent3); }
+.result-box.bleu  .result-value { color: var(--accent2); }
+.result-unit { font-size: 0.9rem; color: var(--text-muted); margin-top: 0.4rem; }
 
+/* ── Métriques secondaires ── */
 .metric-row {
-    background: #F4EBD6;
-    border: 1px solid #C7DBC2;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 10px;
     padding: 1rem 1.2rem;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.6rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.92rem;
-    color: #124660;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    transition: border-color 0.2s;
 }
-.metric-row .mval { font-weight: 700; font-size: 1.05rem; color: #124660; }
-.metric-row .mval.vert  { color: #1B9476; }
-.metric-row .mval.rouge { color: #dc2626; }
+.metric-row:hover { border-color: rgba(61,232,160,0.2); }
+.metric-row .mval {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text);
+}
+.metric-row .mval.vert  { color: var(--accent); }
+.metric-row .mval.rouge { color: var(--accent3); }
 
+/* ── Bouton CTA ── */
 .cta-btn {
     display: block;
     text-align: center;
-    background: #1B9476;
-    color: white !important;
+    background: rgba(61,232,160,0.1);
+    color: var(--accent) !important;
+    font-family: 'JetBrains Mono', monospace;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
     padding: 0.9rem 1rem;
     border-radius: 10px;
     text-decoration: none !important;
     margin-top: 2rem;
-    box-shadow: 0 4px 14px rgba(27,148,118,0.3);
+    border: 1px solid rgba(61,232,160,0.3);
+    transition: all 0.2s;
+}
+.cta-btn:hover {
+    background: rgba(61,232,160,0.18);
+    border-color: rgba(61,232,160,0.6);
 }
 
+/* ── Gate email ── */
 .email-wrapper {
     max-width: 460px;
     margin: 4rem auto;
     text-align: center;
 }
-.email-wrapper h2 { font-size: 1.5rem; font-weight: 700; color: #124660; margin-bottom: 0.4rem; }
-.email-wrapper p  { font-size: 0.9rem; color: #1B9476; margin-bottom: 1.5rem; }
-.legal { font-size: 0.72rem; color: #8BD59E; margin-top: 0.8rem; }
-
-footer {
-    font-size: 0.72rem; color: #8BD59E;
-    text-align: center; margin-top: 3rem;
-    padding-top: 1rem; border-top: 1px solid #C7DBC2;
+.email-wrapper h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem !important;
+    font-weight: 800 !important;
+    color: var(--text) !important;
+    margin-bottom: 0.4rem;
 }
+.email-wrapper p {
+    font-size: 0.85rem !important;
+    color: var(--text-muted) !important;
+    margin-bottom: 1.5rem;
+}
+.legal { font-size: 0.72rem !important; color: #3a4260 !important; margin-top: 0.8rem; }
+
+/* ── Footer ── */
+footer {
+    font-size: 0.72rem;
+    color: #3a4260;
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 </style>
 """, unsafe_allow_html=True)
 
