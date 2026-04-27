@@ -206,7 +206,8 @@ def validate_email_by_token(ws, token):
 # ── Email ─────────────────────────────────────────────────────────────────────
 
 def send_validation_email(recipient_email: str, token: str, app_url: str):
-    activation_link = f"{app_url}?token={token}"
+    app_url = app_url.rstrip("/")
+    activation_link = f"{app_url}/?token={token}"
     sender = st.secrets["gmail"]["sender"]
     password = st.secrets["gmail"]["password"]
 
