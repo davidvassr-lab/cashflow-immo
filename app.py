@@ -165,16 +165,7 @@ def get_gsheet():
             f"has_cr={chr(13) in key}"
         )
     client = gspread.authorize(creds)
-    sid = st.secrets["gsheets"]["sheet_id"]
-    try:
-        sheet = client.open_by_key(sid)
-    except Exception as e:
-        # Lister les sheets accessibles pour debug
-        try:
-            all_sheets = [s["name"] for s in client.list_spreadsheet_files()]
-        except Exception:
-            all_sheets = "impossible de lister"
-        raise ValueError(f"sheet_id utilisé='{sid}' (len={len(sid)}) | sheets accessibles={all_sheets} | erreur={e}")
+    sheet = client.open("Emails App Cashflow")
     return sheet.worksheet("Emails")
 
 def find_row_by_email(ws, email):
