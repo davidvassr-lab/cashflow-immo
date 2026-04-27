@@ -147,10 +147,11 @@ def get_gsheet():
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive",
     ]
-    creds = Credentials.from_service_account_info(
-        st.secrets["google_service_account"],
-        scopes=scopes,
-    )
+    # Convertir le dict secrets en dict Python standard
+    # et corriger les \n littéraux dans la private_key (problème TOML Streamlit)
+    sa_info = dict(st.secrets["google_service_account"])
+    sa_info["private_key"] = sa_info["private_key"].replace("\\n", "\n")
+    creds = Credentials.from_service_account_info(sa_info, scopes=scopes)
     client = gspread.authorize(creds)
     sheet = client.open_by_key(st.secrets["gsheets"]["sheet_id"])
     return sheet.worksheet("Emails")
