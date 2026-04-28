@@ -1,0 +1,13 @@
+name: Keep Streamlit App Alive
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'   # toutes les 10 minutes
+  workflow_dispatch:           # lancement manuel possible
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping cashflow-immo.streamlit.app
+        run: curl -s -o /dev/null -w "%{http_code}" https://cashflow-immo.streamlit.app/
