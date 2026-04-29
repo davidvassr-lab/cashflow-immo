@@ -134,9 +134,19 @@ def fmt(n):
     return f"{n:,.0f} €".replace(",", "\u202f")
 
 # ── Session state ─────────────────────────────────────────────────────────────
+import time
+
+SESSION_DURATION = 24 * 3600  # accès valable 24h
 
 if "access_granted" not in st.session_state:
     st.session_state.access_granted = False
+    st.session_state.access_time = 0
+
+# Expiration : si plus de 24h, on réinitialise
+if st.session_state.access_granted:
+    if time.time() - st.session_state.get("access_time", 0) > SESSION_DURATION:
+        st.session_state.access_granted = False
+        st.session_state.access_time = 0
 
 # ── Gate email ────────────────────────────────────────────────────────────────
 
@@ -151,6 +161,7 @@ if not st.session_state.access_granted:
             e = email.strip()
             if "@" in e and "." in e.split("@")[-1]:
                 st.session_state.access_granted = True
+                st.session_state.access_time = time.time()
                 st.rerun()
             else:
                 st.error("Email invalide.")
