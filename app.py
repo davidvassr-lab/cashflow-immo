@@ -1,4 +1,12 @@
 import streamlit as st
+import gspread
+from google.oauth2.service_account import Credentials
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import secrets as _secrets
+import time
+from datetime import datetime
 
 st.set_page_config(
     page_title="Calculateur Cash-Flow Immo",
@@ -22,7 +30,6 @@ h1 { font-size: 1.7rem !important; font-weight: 700 !important; color: #111827 !
     padding: 1.2rem 1.4rem;
     margin-bottom: 1rem;
 }
-
 .bloc-title {
     font-size: 0.78rem;
     font-weight: 600;
@@ -31,7 +38,6 @@ h1 { font-size: 1.7rem !important; font-weight: 700 !important; color: #111827 !
     color: #6b7280;
     margin-bottom: 0.9rem;
 }
-
 .ligne {
     display: flex;
     justify-content: space-between;
@@ -107,7 +113,7 @@ footer {
 </style>
 """, unsafe_allow_html=True)
 
-# ── Fonctions ────────────────────────────────────────────────────────────────
+# ── Fonctions calcul ──────────────────────────────────────────────────────────
 
 def mensualite(emprunt, taeg_annuel, duree_ans):
     t = taeg_annuel / 12
@@ -131,43 +137,206 @@ def capital_rembourse(emprunt, taeg_annuel, duree_ans, annee_n):
     return emprunt - max(0.0, crd)
 
 def fmt(n):
-    return f"{n:,.0f} €".replace(",", "\u202f")
+    return f"{n:,.0f} €".replace(",", " ")
+
+# ── Google Sheets ─────────────────────────────────────────────────────────────
+
+def get_gsheet():
+    scopes = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive",
+    ]
+    sa_info = dict(st.secrets["google_service_account"])
+    key = sa_info["private_key"]
+    key = key.replace("\\n", "\n").replace("\r\n", "\n").replace("\r", "\n")
+    if not key.endswith("\n"):
+        key += "\n"
+    sa_info["private_key"] = key
+    creds = Credentials.from_service_account_info(sa_info, scopes=scopes)
+    client = gspread.authorize(creds)
+    sheet = client.open("Emails App Cashflow")
+    return sheet.worksheet("Emails")
+
+def find_row_by_email(ws, email):
+    try:
+        cell = ws.find(email, in_column=1)
+        if cell:
+            return cell.row, ws.row_values(cell.row)
+        return None, None
+    except gspread.exceptions.CellNotFound:
+        return None, None
+
+def find_row_by_token(ws, token):
+    try:
+        cell = ws.find(token, in_column=5)
+        if cell:
+            return cell.row, ws.row_values(cell.row)
+        return None, None
+    except gspread.exceptions.CellNotFound:
+        return None, None
+
+def register_new_email(ws, email, token):
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ws.append_row([email, now, "en_attente", "", token])
+
+def update_token_for_row(ws, row_idx, token):
+    ws.update_cell(row_idx, 5, token)
+
+def validate_email_by_token(ws, token):
+    row_idx, row_data = find_row_by_token(ws, token)
+    if row_idx is None:
+        return None
+    email = row_data[0] if row_data else ""
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ws.update_cell(row_idx, 3, "validé")
+    ws.update_cell(row_idx, 4, now)
+    return email
+
+# ── Email de validation ───────────────────────────────────────────────────────
+
+def send_validation_email(recipient_email: str, token: str, app_url: str):
+    app_url = app_url.rstrip("/")
+    activation_link = f"{app_url}/?token={token}"
+    sender = st.secrets["gmail"]["sender"]
+    password = st.secrets["gmail"]["password"]
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "✅ Votre accès au Calculateur Cash-Flow Immo — par David V."
+    msg["From"] = sender
+    msg["To"] = recipient_email
+
+    html = f"""
+    <html>
+    <body style="font-family:Arial,Helvetica,sans-serif;color:#222;max-width:560px;margin:0 auto;">
+    <p>Bonjour,</p>
+    <p>Merci pour votre inscription au <strong>Calculateur Cash-Flow Immo Avant Impôt</strong>.</p>
+    <p>Cliquez sur le bouton ci-dessous pour valider votre email et accéder gratuitement à l'outil :</p>
+    <p style="text-align:center;margin:2rem 0;">
+      <a href="{activation_link}"
+         style="background:#2563eb;color:white;padding:14px 28px;
+                border-radius:8px;text-decoration:none;font-weight:bold;font-size:1rem;">
+        ACCÉDER AU CALCULATEUR →
+      </a>
+    </p>
+    <p style="font-size:0.85rem;color:#6b7280;">Ce lien est personnel et valable 48h.</p>
+    <br>
+    <p>À très vite,</p>
+    <p><strong>David V.</strong><br>
+    Conseiller en investissement immobilier clé en main<br>
+    Hauts-de-France</p>
+    </body>
+    </html>
+    """
+    msg.attach(MIMEText(html, "html"))
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(sender, password)
+        server.sendmail(sender, recipient_email, msg.as_string())
 
 # ── Session state ─────────────────────────────────────────────────────────────
-import time
 
-SESSION_DURATION = 24 * 3600  # accès valable 24h
+SESSION_DURATION = 24 * 3600
 
 if "access_granted" not in st.session_state:
     st.session_state.access_granted = False
     st.session_state.access_time = 0
+if "user_email" not in st.session_state:
+    st.session_state.user_email = ""
+if "token_just_validated" not in st.session_state:
+    st.session_state.token_just_validated = False
+if "validation_sent" not in st.session_state:
+    st.session_state.validation_sent = False
 
-# Expiration : si plus de 24h, on réinitialise
+# Expiration session 24h
 if st.session_state.access_granted:
     if time.time() - st.session_state.get("access_time", 0) > SESSION_DURATION:
         st.session_state.access_granted = False
         st.session_state.access_time = 0
+
+# ── Vérification token dans l'URL ─────────────────────────────────────────────
+
+url_token = st.query_params.get("token", None)
+
+if url_token and not st.session_state.access_granted:
+    with st.spinner("Validation de votre email en cours…"):
+        try:
+            ws = get_gsheet()
+            validated_email = validate_email_by_token(ws, url_token)
+            if validated_email:
+                st.session_state.access_granted = True
+                st.session_state.access_time = time.time()
+                st.session_state.user_email = validated_email
+                st.session_state.token_just_validated = True
+                st.query_params.clear()
+                st.rerun()
+            else:
+                st.error("❌ Lien invalide ou déjà utilisé. Saisissez votre email pour recevoir un nouveau lien.")
+        except Exception as e:
+            st.error(f"Erreur de validation : {type(e).__name__} — {str(e)[:400]}")
 
 # ── Gate email ────────────────────────────────────────────────────────────────
 
 if not st.session_state.access_granted:
     st.markdown('<div class="email-wrapper">', unsafe_allow_html=True)
     st.markdown("## 🏠 Calculateur Cash-Flow Immo")
-    st.markdown("Entrez votre email pour accéder gratuitement à l'outil :")
+
+    if st.session_state.validation_sent:
+        st.success("📧 Un email de validation vous a été envoyé. Cliquez sur le lien pour accéder au calculateur.")
+        st.info("Vous n'avez pas reçu l'email ? Vérifiez vos spams ou ressaisissez votre adresse ci-dessous.")
+    else:
+        st.markdown("Entrez votre email pour accéder gratuitement à l'outil :")
+
     with st.form("gate"):
-        email = st.text_input("Email", placeholder="vous@exemple.com", label_visibility="collapsed")
+        email_input = st.text_input("Email", placeholder="vous@exemple.com", label_visibility="collapsed")
         ok = st.form_submit_button("Accéder au calculateur →", use_container_width=True, type="primary")
+
         if ok:
-            e = email.strip()
-            if "@" in e and "." in e.split("@")[-1]:
-                st.session_state.access_granted = True
-                st.session_state.access_time = time.time()
-                st.rerun()
+            email_clean = email_input.strip().lower()
+            if not ("@" in email_clean and "." in email_clean.split("@")[-1]):
+                st.error("Adresse email invalide.")
             else:
-                st.error("Email invalide.")
-    st.markdown('<p class="legal">En renseignant votre email, vous acceptez d\'être recontacté.</p>', unsafe_allow_html=True)
+                app_url = st.secrets.get("app", {}).get("url", "https://cashflow-immo.streamlit.app")
+                try:
+                    ws = get_gsheet()
+                    row_idx, row_data = find_row_by_email(ws, email_clean)
+
+                    if row_data:
+                        statut = row_data[2] if len(row_data) > 2 else ""
+                        if statut == "validé":
+                            # CAS B — email validé → accès direct
+                            st.session_state.user_email = email_clean
+                            st.session_state.access_granted = True
+                            st.session_state.access_time = time.time()
+                            st.rerun()
+                        else:
+                            # CAS C — en_attente → renvoi token
+                            new_token = _secrets.token_urlsafe(32)
+                            update_token_for_row(ws, row_idx, new_token)
+                            send_validation_email(email_clean, new_token, app_url)
+                            st.session_state.validation_sent = True
+                            st.rerun()
+                    else:
+                        # CAS A — nouvel email → inscription + envoi
+                        new_token = _secrets.token_urlsafe(32)
+                        register_new_email(ws, email_clean, new_token)
+                        send_validation_email(email_clean, new_token, app_url)
+                        st.session_state.validation_sent = True
+                        st.rerun()
+
+                except smtplib.SMTPException as e:
+                    st.error(f"Erreur email : {type(e).__name__} — {str(e)[:300]}")
+                except Exception as e:
+                    st.error(f"Erreur BDD : {type(e).__name__} — {str(e)[:400]}")
+
+    st.markdown('<p class="legal">En renseignant votre email, vous acceptez d\'être recontacté par David V.</p>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
+
+# ── Bandeau confirmation ──────────────────────────────────────────────────────
+
+if st.session_state.token_just_validated:
+    st.success("✅ Email validé ! Bienvenue dans le calculateur.")
+    st.session_state.token_just_validated = False
 
 # ── Titre ─────────────────────────────────────────────────────────────────────
 
@@ -181,14 +350,8 @@ st.markdown("---")
 st.markdown("### 1. Acquisition")
 
 prix = st.number_input("Prix négocié FAI (€)", min_value=0, value=150000, step=1000)
-
-frais_notaire_pct = st.number_input(
-    "Frais de notaire (%)",
-    min_value=0.0, max_value=20.0, value=8.5, step=0.1,
-    help="8,5% par défaut — modifiable"
-)
+frais_notaire_pct = st.number_input("Frais de notaire (%)", min_value=0.0, max_value=20.0, value=8.5, step=0.1, help="8,5% par défaut — modifiable")
 frais_notaire = round(prix * frais_notaire_pct / 100)
-
 frais_dossier = st.number_input("Frais de dossier bancaires (€)", min_value=0, value=750, step=50)
 travaux       = st.number_input("Montant des travaux (€)",         min_value=0, value=0,   step=1000)
 mobilier      = st.number_input("Mobilier / Ameublement (€)",      min_value=0, value=0,   step=500)
@@ -199,9 +362,9 @@ mobilier      = st.number_input("Mobilier / Ameublement (€)",      min_value=0
 
 st.markdown("### 2. Financement")
 
-apport       = st.number_input("Apport (€)",           min_value=0, value=0,  step=1000)
-duree_ans    = st.number_input("Durée d'emprunt (ans)", min_value=1, max_value=30, value=20, step=1)
-taeg_pct     = st.number_input("TAEG — assurance incluse (%)", min_value=0.0, max_value=20.0, value=3.5, step=0.05)
+apport    = st.number_input("Apport (€)",           min_value=0, value=0,  step=1000)
+duree_ans = st.number_input("Durée d'emprunt (ans)", min_value=1, max_value=30, value=20, step=1)
+taeg_pct  = st.number_input("TAEG — assurance incluse (%)", min_value=0.0, max_value=20.0, value=3.5, step=0.05)
 
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 3 — REVENUS
@@ -209,10 +372,8 @@ taeg_pct     = st.number_input("TAEG — assurance incluse (%)", min_value=0.0, 
 
 st.markdown("### 3. Revenus locatifs")
 
-loyer_hc       = st.number_input("Loyer mensuel HC (€)", min_value=0, value=800, step=50,
-                                  help="Hors charges — montant perçu hors provision pour charges")
-charges_loca   = st.number_input("Charges locataires récupérables (€/mois)", min_value=0, value=0, step=10,
-                                  help="Provision pour charges payée par le locataire en plus du loyer HC. S'ajoute au cash-flow.")
+loyer_hc     = st.number_input("Loyer mensuel HC (€)", min_value=0, value=800, step=50, help="Hors charges — montant perçu hors provision pour charges")
+charges_loca = st.number_input("Charges locataires récupérables (€/mois)", min_value=0, value=0, step=10, help="Provision pour charges payée par le locataire en plus du loyer HC.")
 
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 4 — CHARGES ANNUELLES (propriétaire)
@@ -220,58 +381,46 @@ charges_loca   = st.number_input("Charges locataires récupérables (€/mois)",
 
 st.markdown("### 4. Charges annuelles (propriétaire)")
 
-gestion_pct    = st.number_input("Gestion locative (%)", min_value=0.0, max_value=30.0, value=0.0, step=0.5,
-                                  help="Appliqué sur le loyer HC annuel. 0 si gestion en direct.")
-taxe_fonciere  = st.number_input("Taxe foncière (€/an)",               min_value=0, value=800, step=50)
-assurance_pno  = st.number_input("Assurance PNO (€/an)",               min_value=0, value=150, step=10,
-                                  help="150 €/lot habitation — 350 €/lot commerce")
-charges_copro  = st.number_input("Charges de copropriété (€/an)",      min_value=0, value=0,   step=100,
-                                  help="0 € si maison individuelle")
-charges_fluides= st.number_input("Électricité / eau / internet (€/an)",min_value=0, value=0,   step=100,
-                                  help="0 € si à la charge du locataire")
+gestion_pct     = st.number_input("Gestion locative (%)", min_value=0.0, max_value=30.0, value=0.0, step=0.5, help="Appliqué sur le loyer HC annuel. 0 si gestion en direct.")
+taxe_fonciere   = st.number_input("Taxe foncière (€/an)",                min_value=0, value=800, step=50)
+assurance_pno   = st.number_input("Assurance PNO (€/an)",                min_value=0, value=150, step=10, help="150 €/lot habitation — 350 €/lot commerce")
+charges_copro   = st.number_input("Charges de copropriété (€/an)",       min_value=0, value=0,   step=100, help="0 € si maison individuelle")
+charges_fluides = st.number_input("Électricité / eau / internet (€/an)", min_value=0, value=0,   step=100, help="0 € si à la charge du locataire")
 
 # ═════════════════════════════════════════════════════════════════════════════
-# CALCULS (tous ici, après tous les inputs)
+# CALCULS
 # ═════════════════════════════════════════════════════════════════════════════
 
 taeg = taeg_pct / 100
 loyer_hc_annuel = loyer_hc * 12
 
-# Acquisition
 total_sans_garantie = prix + frais_notaire + frais_dossier + travaux + mobilier
 emprunt_brut        = max(0, total_sans_garantie - apport)
 frais_garantie      = round(emprunt_brut * 0.012)
 total_projet        = total_sans_garantie + frais_garantie
 emprunt             = max(0, total_projet - apport)
-frais_garantie      = round(emprunt * 0.012)          # 2e passe (converge)
+frais_garantie      = round(emprunt * 0.012)
 total_projet        = total_sans_garantie + frais_garantie
 emprunt             = max(0, total_projet - apport)
 
-# Financement
-mensualite_val = mensualite(emprunt, taeg, int(duree_ans))
+mensualite_val    = mensualite(emprunt, taeg, int(duree_ans))
+gestion_val       = round(loyer_hc_annuel * gestion_pct / 100)
+total_charges_ann = gestion_val + taxe_fonciere + assurance_pno + charges_copro + charges_fluides
 
-# Charges propriétaire
-gestion_val        = round(loyer_hc_annuel * gestion_pct / 100)
-total_charges_ann  = gestion_val + taxe_fonciere + assurance_pno + charges_copro + charges_fluides
-
-# Résultats
 rendement_brut = (loyer_hc_annuel / total_projet * 100) if total_projet > 0 else 0.0
 rendement_net  = ((loyer_hc_annuel - total_charges_ann) / total_projet * 100) if total_projet > 0 else 0.0
-
-# Cash-flow : loyer HC + charges récupérables - mensualité - charges proprio
-cashflow = loyer_hc + charges_loca - mensualite_val - (total_charges_ann / 12)
+cashflow       = loyer_hc + charges_loca - mensualite_val - (total_charges_ann / 12)
 
 cap10 = capital_rembourse(emprunt, taeg, int(duree_ans), 10)
 cap20 = capital_rembourse(emprunt, taeg, int(duree_ans), 20)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# AFFICHAGE RÉCAPITULATIF
+# AFFICHAGE
 # ═════════════════════════════════════════════════════════════════════════════
 
 st.markdown("---")
 st.markdown("### Récapitulatif")
 
-# Bloc acquisition
 st.markdown(f"""
 <div class="bloc">
   <div class="bloc-title">Acquisition</div>
@@ -285,7 +434,6 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Bloc financement
 st.markdown(f"""
 <div class="bloc">
   <div class="bloc-title">Financement</div>
@@ -295,7 +443,6 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Bloc revenus & charges
 st.markdown(f"""
 <div class="bloc">
   <div class="bloc-title">Revenus & Charges mensuels</div>
@@ -306,14 +453,9 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ═════════════════════════════════════════════════════════════════════════════
-# RÉSULTATS
-# ═════════════════════════════════════════════════════════════════════════════
-
 st.markdown("---")
 st.markdown("### Résultats")
 
-# Cash-flow principal
 cf_class = "vert" if cashflow > 0 else ("rouge" if cashflow < 0 else "bleu")
 cf_sign  = "+" if cashflow >= 0 else ""
 
@@ -325,41 +467,28 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Rendements
 rn_cls = "vert" if rendement_net >= 0 else "rouge"
 st.markdown(f"""
 <div class="metric-row">
-  <span>Rendement brut</span>
-  <span class="mval">{rendement_brut:.2f} %</span>
+  <span>Rendement brut</span><span class="mval">{rendement_brut:.2f} %</span>
 </div>
 <div class="metric-row">
-  <span>Rendement net de charges</span>
-  <span class="mval {rn_cls}">{rendement_net:.2f} %</span>
+  <span>Rendement net de charges</span><span class="mval {rn_cls}">{rendement_net:.2f} %</span>
+</div>
+<div class="metric-row">
+  <span>Capital remboursé à 10 ans</span><span class="mval">{"—" if cap10 is None else f"{cap10:,.0f} €"}</span>
+</div>
+<div class="metric-row">
+  <span>Capital remboursé à 20 ans</span><span class="mval">{"—" if cap20 is None else f"{cap20:,.0f} €"}</span>
 </div>
 """, unsafe_allow_html=True)
 
-# Capital remboursé
-val10 = f"{cap10:,.0f} €" if cap10 is not None else "—"
-val20 = f"{cap20:,.0f} €" if cap20 is not None else "—"
-st.markdown(f"""
-<div class="metric-row">
-  <span>Capital remboursé à 10 ans</span>
-  <span class="mval">{val10}</span>
-</div>
-<div class="metric-row">
-  <span>Capital remboursé à 20 ans</span>
-  <span class="mval">{val20}</span>
-</div>
-""", unsafe_allow_html=True)
-
-# ── Bouton CTA (bas de page uniquement) ──────────────────────────────────────
 st.markdown("""
 <a class="cta-btn" href="https://calendar.app.google/54cCfHMosWJSd2zRA" target="_blank">
   📅 Prendre rendez-vous — Investissement clé en main
 </a>
 """, unsafe_allow_html=True)
 
-# ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("""
 <footer>
   Simulateur indicatif avant impôt. Ne constitue pas un conseil fiscal ou financier.
