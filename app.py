@@ -290,12 +290,12 @@ if not st.session_state.access_granted:
         email_input = st.text_input("Email", placeholder="vous@exemple.com", label_visibility="collapsed")
         ok = st.form_submit_button("Accéder au calculateur →", use_container_width=True, type="primary")
 
-        if ok:
+        if ok and not st.session_state.validation_sent:
             email_clean = email_input.strip().lower()
             if not ("@" in email_clean and "." in email_clean.split("@")[-1]):
                 st.error("Adresse email invalide.")
             else:
-                app_url = st.secrets.get("app", {}).get("url", "https://cashflow-immo.streamlit.app")
+                app_url = "https://cashflow-immo-826370053216.europe-west1.run.app"
                 try:
                     ws = get_gsheet()
                     row_idx, row_data = find_row_by_email(ws, email_clean)
